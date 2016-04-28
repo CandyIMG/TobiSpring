@@ -1,17 +1,19 @@
-import java.sql.SQLException;
+package springbook.user.dao;
 
 import static org.hamcrest.CoreMatchers.is;
 
-import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+import java.sql.SQLException;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.postgresql.util.PSQLException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import springbook.user.dao.UserDao;
 import springbook.user.dto.User;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -58,5 +60,26 @@ public class UserDaoTest {
 		
 		dao.add(user3);
 		Assert.assertThat(dao.count(), is(3));
+	}
+	
+	
+	@Test(expected=EmptyResultDataAccessException.class)
+	public void getUserFailure() throws SQLException {
+		dao.deleteAll();
+		Assert.assertEquals(dao.count(), 0);
+		
+		dao.getUser("unknown");
+	}
+	
+	@Test(expected=PSQLException.class)
+	public void addDuplicate() throws SQLException {
+		dao.deleteAll();
+		Assert.assertEquals(dao.count(), 0);
+		
+		dao.add(user1);
+		Assert.assertEquals(dao.count(), 1);
+		
+		dao.add(user1);
+		
 	}
 }

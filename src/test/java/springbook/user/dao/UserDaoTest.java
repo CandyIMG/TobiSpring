@@ -10,10 +10,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.postgresql.util.PSQLException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import springbook.user.domain.Level;
 import springbook.user.dto.User;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -29,57 +31,66 @@ public class UserDaoTest {
 	
 	@Before
 	public void before() {
-		user1 = new User("jimin", "박지민", "pass1");
-		user2 = new User("minchae", "박민채", "pass2");
-		user3 = new User("jiyoung", "김지영", "pass3");
+		user1 = new User("jimin", "박지민", "pass1", Level.BASIC, 1, 0);
+		user2 = new User("minchae", "박민채", "pass2", Level.SILVER, 55, 10);
+		user3 = new User("jiyoung", "김지영", "pass3", Level.GOLD, 100, 40);
 	}
 	
 	@Test
 	public void addAndGet() throws SQLException {
 		dao.deleteAll();
-		Assert.assertThat(dao.count(), is(0));
+		Assert.assertThat(dao.getCount(), is(0));
 		
 		dao.add(user1);
-		Assert.assertThat(dao.count(), is(1));
+		Assert.assertThat(dao.getCount(), is(1));
 		
 		User tempUser = dao.getUser(user1.getId());
-		Assert.assertThat(tempUser.getName(), is(user1.getName()));
-		Assert.assertThat(tempUser.getPassword(), is(user1.getPassword()));
+		checkSameUser(tempUser, user1);
 	}
 	
 	@Test
-	public void count() throws SQLException{
+	public void getCount() throws SQLException{
 		dao.deleteAll();
-		Assert.assertThat(dao.count(), is(0));
+		Assert.assertThat(dao.getCount(), is(0));
 		
 		dao.add(user1);
-		Assert.assertThat(dao.count(), is(1));
+		Assert.assertThat(dao.getCount(), is(1));
 		
 		dao.add(user2);
-		Assert.assertThat(dao.count(), is(2));
+		Assert.assertThat(dao.getCount(), is(2));
 		
 		dao.add(user3);
-		Assert.assertThat(dao.count(), is(3));
+		Assert.assertThat(dao.getCount(), is(3));
 	}
 	
 	
 	@Test(expected=EmptyResultDataAccessException.class)
 	public void getUserFailure() throws SQLException {
 		dao.deleteAll();
-		Assert.assertEquals(dao.count(), 0);
+		Assert.assertEquals(dao.getCount(), 0);
 		
 		dao.getUser("unknown");
 	}
 	
-	@Test(expected=PSQLException.class)
+	@Test(expected=DuplicateKeyException.class)
 	public void addDuplicate() throws SQLException {
 		dao.deleteAll();
-		Assert.assertEquals(dao.count(), 0);
+		Assert.assertEquals(dao.getCount(), 0);
 		
 		dao.add(user1);
-		Assert.assertEquals(dao.count(), 1);
+		Assert.assertEquals(dao.getCount(), 1);
 		
 		dao.add(user1);
+		
+	}
+	
+	private void checkSameUser(User user1, User user2) {
+		Assert.assertThat(user1.getId(), is(user2.getId()));
+		Assert.assertThat(user1.getName(), is(user2.getName()));
+		Assert.assertThat(user1.getPassword(), is(user2.getPassword()));
+		Assert.assertThat(user1.getLevel(), is(user2.getLevel()));
+		Assert.assertThat(user1.getLogin(), is(user2.getLogin()));
+		Assert.assertThat(user1.getRecommend(), is(user2.getRecommend()));
 		
 	}
 }
